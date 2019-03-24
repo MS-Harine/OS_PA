@@ -11,7 +11,8 @@ int __init baremin_init(void) {
 	printk("Hideme : Hi.\n") ;
 	
 	list_for_each_entry(target_module, &THIS_MODULE->list, list) {
-		printk("Module list: %s\n", target_module->name);
+		if (target_module->init == baremin_init)
+			printk("Module list: %s\n", target_module->name);
 	}
 
 	return 0;
