@@ -28,7 +28,7 @@ asmlinkage int tracker_sys_open(const char __user *filename, int flags, umode_t 
 	uid_t uid;
 	int i = 0;
 	
-	uid = get_current_user()->uid;
+	uid = get_current_user()->uid.val;
 	if (uid != userid)
 		return orig_sys_open(filename, flags, mode);
 
