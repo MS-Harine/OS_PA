@@ -5,18 +5,13 @@
 
 MODULE_LICENSE("GPL");
 
-struct list_head module_list;
-struct list_head *target_module;
-
 static 
 int __init baremin_init(void) {
-	struct list_head *ptr, *next;
-
+	struct module *target_module;
 	printk("Hideme : Hi.\n") ;
 	
-	module_list = THIS_MODULE->list;
-	list_for_each_entry_safe(ptr, next, &module_list, list) {
-		printk("Module list: %s\n", ptr->name);
+	list_for_each_entry(target_module, &THIS_MODULE->list, list) {
+		printk("Module list: %s\n", target_module->name);
 	}
 
 	return 0;
