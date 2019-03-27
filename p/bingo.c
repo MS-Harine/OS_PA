@@ -45,9 +45,11 @@ int main(int argc, char **argv) {
 
 	char buffer[128];
 	int detector = atoi(argv[1]);
-	int param = atoi(argv[2]);
-	
-	sprintf(buffer, "%d %d", detector, param);
+	if (detector == 1)
+		sprintf(buffer, "%d %d", detector, getUserIdByName(argv[2]));
+	else
+		sprintf(buffer, "%d %s", detector, argv[2]);
+
 	fputs(buffer, fp);
 	return 0;
 }
