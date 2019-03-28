@@ -51,5 +51,6 @@ int main(int argc, char **argv) {
 		sprintf(buffer, "%d %s", detector, argv[2]);
 
 	fputs(buffer, fp);
+	fclose(fp);
 	return 0;
 }
