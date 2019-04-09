@@ -1,4 +1,4 @@
 # Operating System Programming Assignments
 #### Handong global university / 2019-1 / ECE30021-02
 
-ÇÑµ¿´ëÇĞ±³ ECE30021 Operating System Programming Assignments ÀÔ´Ï´Ù.
+í•œë™ëŒ€í•™êµ ECE30021 Operating System Programming Assignments ê³¼ì œì…ë‹ˆë‹¤.
