@@ -21,23 +21,29 @@ int main(int argc, char *argv[]) {
 	Data info;
 
 	handle_opt(argc, argv, &info);
-	sock = connect_to_server(&info);
 
 	// Try build
-	status = try_build(sock, info.filename, result);
-	shutdown(sock, SHUT_RDWR);
+	status = work(&info, &result, 1);
+	if (status == LOGIN_FAILED) {
+		printf("Login failed.\n");
+		exit(EXIT_FAILURE);
+	}
 
 	if (status == BUILD_FAILED) {
 		printf("Build failed. See error message.\n");
 		printf("%s", result);
 		exit(EXIT_FAILURE);
 	}
-	free(result);
-	result = NULL;
+	FREE(result);
 	
 	// Try test
 	do {
-		status = try_test(&info, result);
+		status = work(&info, &result, 0);
+		if (status == LOGIN_FAILED) {
+			printf("Login failed.\n");
+			exit(EXIT_FAILURE);
+		}
+
 		switch (status) {
 		case TEST_PROCESS:
 			printf("> Testing... %s\b", result);
@@ -53,9 +59,9 @@ int main(int argc, char *argv[]) {
 			printf("> Success!\n");
 			break;
 		}
-		free(result);
+		FREE(result);
 	} while (status == TEST_PROCESS);
-	
+
 	return 0;
 }
 

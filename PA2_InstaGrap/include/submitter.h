@@ -20,8 +20,7 @@ struct _dataset {
 typedef struct _dataset Data;
 
 int connect_to_server(Data *);
-int try_login(int, const char *, const char *);
-int try_build(int, const char *, char *);
-int try_test(Data *, char *);
+char * get_auth_data(const char *, const char *);
+int work(Data *, char **, int);
 
 #endif

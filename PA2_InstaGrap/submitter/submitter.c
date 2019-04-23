@@ -8,9 +8,10 @@
 #include "submitter.h"
 #include "protocol.h"
 
-#define	FREE(x)	free(x); x = NULL;
-
 int _send(int sock, char *message) {
+	DPRINT(printf("> _send\n"));
+	DPRINT(printf("> message\n%s\n> message end\n", message));
+
 	int len = 0, s = 0, result  = 0;
 	char *orig = message;
 
@@ -21,28 +22,30 @@ int _send(int sock, char *message) {
 		result += s;
 	}
 
+	DPRINT(printf("< _send\n"));
 	return result;
 }
 
-int _recv(int sock, char *message) {
+int _recv(int sock, char *message[]) {
+	DPRINT(printf("> _recv\n"));
+	
 	int len = 0, s = 0;
 	char buf[BUF_SIZE];
 	
-	if (message != NULL) {
-		free(message);
-		message = NULL;
+	if (*message != NULL) {
+		FREE(*message);
 	}
 
 	while ((s = recv(sock, buf, BUF_SIZE - 1, 0)) > 0) {
 		buf[s] = 0x0;
-		if (message == NULL) {
-			message = strdup(buf);
+		if (*message == NULL) {
+			*message = strdup(buf);
 			len = s;
 		}
 		else {
-			message = realloc(message, len + s + 1);
-			strncpy(message + len, buf, s);
-			message[len + s] = 0x0;
+			*message = realloc(*message, len + s + 1);
+			strncpy(*message + len, buf, s);
+			*message[len + s] = 0x0;
 			len += s;
 		}
 	}
@@ -52,82 +55,73 @@ int _recv(int sock, char *message) {
 		exit(EXIT_FAILURE);
 	}
 
+	DPRINT(printf("< recv message\n%s\n< recv message end\n", *message));
+	DPRINT(printf("< _recv\n"));
 	return len;
 }
 
-int try_login(int sock, const char *id, const char *pw) {
+char * get_auth_data(const char *id, const char *pw) {
+	DPRINT(printf("> get_auth_data\n"));
+
 	char *message = NULL;
-	int status = 0;
 
 	message = (char *)malloc(sizeof(char) * (strlen(id) + strlen(pw) + 2));
 	strcpy(message, id);
 	strcat(message, ":");
 	strcat(message, pw);
-
-	// Send ID/PW
-	_send(sock, message);
-	FREE(message);
 	
-	_recv(sock, message);
-	status = message[0];
-	FREE(message);
-	
-	return status;
+	DPRINT(printf("< get_auth_data\n"));
+	return message;
 }
 
-int try_build(int sock, const char *file, char *result) {
+int work(Data *info, char *result[], int is_build) {
+	DPRINT(printf("> work\n"));
+
 	char *message = NULL, buf[BUF_SIZE] = { 0, };
 	FILE *fp = NULL;
-	int len = 0, status = 0;
-
-	fp = fopen(file, "r");
-	if (fp == NULL) {
-		fputs("Failed to open file!\n", stderr);
-		exit(EXIT_FAILURE);
-	}
-
-	message = (char *)malloc(sizeof(char));
-	message[0] = 0x0;
-	while(fgets(buf, BUF_SIZE - 1, fp)) {
-		len += strlen(buf);
-		message = (char *)realloc(message, sizeof(char) * (len + 1));
-		strcat(message, buf);
-	}
-
-	// Send file
-	_send(sock, message);
-	FREE(message);
-
-	_recv(sock, message);
-	status = message[0];
-	
-	if (result != NULL) {
-		FREE(result);
-	}
-	result = strdup(message + 1);
-	FREE(message);
-	return status;
-}
-
-int try_test(Data *info, char *result) {
-	char *message = NULL;
-	int sock = 0, status = 0;
+	int len = 0, status = 0, sock = 0;
 
 	sock = connect_to_server(info);
-	_recv(sock, message);
-	
-	status = message[0];
-	if (result != NULL) {
-		FREE(result);
+
+	message = get_auth_data((info->auth).id, (info->auth).pw);
+	if (is_build) {
+		fp = fopen(info->filename, "r");
+		if (fp == NULL) {
+			fprintf(stderr, "Failed to open file %s\n", info->filename);
+			exit(EXIT_FAILURE);
+		}
+
+		len = 0;
+		while(fgets(buf, BUF_SIZE - 1, fp)) {
+			len += strlen(buf);
+			message = (char *)realloc(message, sizeof(char) * (strlen(message) + len + 1));
+			strcat(message, buf);
+		}
+		fclose(fp);
 	}
-	result = strdup(message + 1);
+	else {
+		message = (char *)realloc(message, sizeof(char) * (strlen(message) + 2));
+		message[strlen(message) + 1] = 0x0;
+	}
+
+	_send(sock, message);
+	shutdown(sock, SHUT_WR);
 	FREE(message);
 
-	shutdown(sock, SHUT_RDWR);
+	_recv(sock, &message);
+	shutdown(sock, SHUT_RD);
+	status = message[0];
+
+	*result = strdup(message + 1);
+	FREE(message);
+
+	DPRINT(printf("< work\n"));
 	return status;
 }
 
 int connect_to_server(Data *information) {
+	DPRINT(printf("> connect_to_server\n"));
+
 	int sock = 0, status = 0;
 	struct sockaddr_in serv_addr;
 
@@ -150,11 +144,6 @@ int connect_to_server(Data *information) {
 		exit(EXIT_FAILURE);
 	}
 
-	status = try_login(sock, (information->auth).id, (information->auth).pw);
-	if (status == LOGIN_FAILED) {
-		printf("Login failed. Check your ID and PW.\n");
-		exit(EXIT_FAILURE);
-	}
-
+	DPRINT(printf("< connect_to_server\n"));
 	return sock;
 }
