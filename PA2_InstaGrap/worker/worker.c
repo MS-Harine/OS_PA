@@ -10,8 +10,6 @@
 #include "protocol.h"
 #include "worker.h"
 
-int file_count = 0;
-
 int _send(int sock, char *message, int use_sock) {
 	DPRINT(printf("> _send | sock: %d\n", sock));
 	DPRINT(printf("> message\n%s\n> message end\n", message));
@@ -106,8 +104,6 @@ int open_server(int port, struct sockaddr_in *address) {
 	DPRINT(printf("> open_server | port = %d\n", port));
 
 	int sock = 0;
-	int addrlen = sizeof(*address);
-
 	sock = socket(AF_INET, SOCK_STREAM, 0);
 	if (sock == -1) {
 		perror("socket failed: ");
@@ -141,17 +137,10 @@ int task(int sock, pthread_mutex_t *m) {
 	len = _recv(sock, &message, 1);
 	shutdown(sock, SHUT_RD);
 	
-	printf("len: %d ", len);
 	// Get C file length and copy content
 	for (i = 0; i < 4; i++)
 		caster.data[i] = message[i];
 
-	for (i = 0; i < caster.length; i++) {
-		printf("%d ", message[i]);
-		if ((i + 1) % 8 == 0)
-			printf("\n");
-	}
-	
 	c_content = (char *)malloc(sizeof(char) * (caster.length + 1));
 	strncpy(c_content, message + 4, caster.length);
 	c_content[caster.length] = 0x0;
@@ -166,9 +155,10 @@ int task(int sock, pthread_mutex_t *m) {
 
 	// Get filename and write C content to file
 	pthread_mutex_lock(m);
-	my_file_count = file_count;
-	file_count++;
+	my_file_count = *file_count;
+	(*file_count)++;
 	pthread_mutex_unlock(m);
+
 
 	filename = concat("/tmp/", my_file_count, ".c");
 	output = concat("/tmp/", my_file_count, ".out");
@@ -243,4 +233,5 @@ int task(int sock, pthread_mutex_t *m) {
 		execlp("rm", "rm", filename, output, NULL);
 	}
 	DPRINT(printf("< task\n"));
+	return 0;
 }

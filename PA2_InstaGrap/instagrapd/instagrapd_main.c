@@ -13,8 +13,8 @@
 void handle_opt(int, char **, Data *);
 
 int main(int argc, char *argv[]) {
-	int serv = 0, client = 0, worker = 0;
-	int status = 0, addrlen = 0;
+	int serv = 0, client = 0;
+	int addrlen = 0;
 	struct sockaddr_in address;
 	struct _thread_args *arg;
 	pthread_t thread;
@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
 }
 
 void handle_opt(int argc, char **argv, Data *data) {
-	int c = 0, i = 0;
+	int c = 0;
 	char *ip_n_port = NULL, *temp = NULL;
 	struct stat buffer;
 

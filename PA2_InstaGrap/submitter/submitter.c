@@ -115,14 +115,14 @@ int work(Data *info, char *result[], int is_build) {
 	*result = strdup(message + 1);
 	FREE(message);
 
-	DPRINT(printf("< work\n"));
+	DPRINT(printf("< work %d\n", status));
 	return status;
 }
 
 int connect_to_server(Data *information) {
 	DPRINT(printf("> connect_to_server\n"));
 
-	int sock = 0, status = 0;
+	int sock = 0;
 	struct sockaddr_in serv_addr;
 
 	sock = socket(AF_INET, SOCK_STREAM, 0);

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <ctype.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -178,6 +179,22 @@ char * concat(const char *p, int n, const char *str, int add_slash) {
 	return r;
 }
 
+char * trim(char *string) {
+	char *temp = NULL, *start = string, *end = string + strlen(string) - 1;
+	
+	while (*start != 0x0 && isspace(*start))
+		++start;
+	
+	while (end != string && isspace(*end))
+		--end;
+
+	temp = (char *)malloc(sizeof(char) * (strlen(start) - strlen(end) + 2));
+	strncpy(temp, start, strlen(start) - strlen(end) + 1);
+	temp[strlen(start) - strlen(end) + 1] = 0x0;
+	free(string);
+	return temp;
+}
+
 int check_answer(char *result, char *answer_file) {
 	DPRINT(printf("> check_answer\n"));
 
@@ -201,6 +218,8 @@ int check_answer(char *result, char *answer_file) {
 	}
 	fclose(fp);
 
+	result = trim(result);
+	answer = trim(answer);
 	if (!strcmp(result, answer))
 		status = TEST_SUCCESS;
 	else
@@ -244,10 +263,10 @@ void * work(void *data) {
 	
 	// TODO: Check for testing
 
-	worker = connect_to_worker(info);
 
 	// Test
 	for (i = 1; i <= 10; i++) {
+		worker = connect_to_worker(info);
 		testcase = concat(test_dir, i, ".in", 1);
 		label = concat(test_dir, i, ".out", 1);
 		status = try_process(worker, content, testcase, label, &result);
@@ -284,6 +303,7 @@ void * work(void *data) {
 
 	message = (char *)malloc(sizeof(char) * 4);
 	sprintf(message, "%d%d", status, sum);
+	message[0] -= '0';
 	_send(client, message, 0);
 	shutdown(client, SHUT_WR);
 	FREE(message);

@@ -22,25 +22,16 @@ int main(int argc, char *argv[]) {
 
 	handle_opt(argc, argv, &info);
 
-	// Try build
-	status = work(&info, &result, 1);
-	if (status == LOGIN_FAILED) {
-		printf("Login failed.\n");
-		exit(EXIT_FAILURE);
-	}
-
-	if (status == BUILD_FAILED) {
-		printf("Build failed. See error message.\n");
-		printf("%s", result);
-		exit(EXIT_FAILURE);
-	}
-	FREE(result);
-	
 	// Try test
 	do {
-		status = work(&info, &result, 0);
+		status = work(&info, &result, 1);
 		if (status == LOGIN_FAILED) {
 			printf("Login failed.\n");
+			exit(EXIT_FAILURE);
+		}
+		if (status == BUILD_FAILED) {
+			printf("Build failed. See error message.\n");
+			printf("%s", result);
 			exit(EXIT_FAILURE);
 		}
 
@@ -54,9 +45,11 @@ int main(int argc, char *argv[]) {
 			break;
 		case TEST_FAILED:
 			printf("> Wrong\n");
+			printf("> %s/10\n", result);
 			break;
 		case TEST_SUCCESS:
 			printf("> Success!\n");
+			printf("> %s/10\n", result);
 			break;
 		}
 		FREE(result);

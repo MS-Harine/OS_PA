@@ -9,8 +9,8 @@
 #define	TEST_SUCCESS	5
 #define	TEST_PROCESS	6
 
-#define	LOGIN_SUCCESS	1
-#define	LOGIN_FAILED	2
+#define	LOGIN_SUCCESS	7
+#define	LOGIN_FAILED	8
 
 #define READ_END	0
 #define WRITE_END	1

@@ -11,6 +11,8 @@
 
 #define LISTEN_QUEUE	16
 
+int *file_count = NULL;
+
 void handle_opt(int, char **, int *);
 
 int main(int argc, char *argv[]) { 
@@ -26,6 +28,7 @@ int main(int argc, char *argv[]) {
 	pthread_mutexattr_init(&attr);
 	pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
 	m = (pthread_mutex_t *)mmap(0, sizeof(pthread_mutex_t), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+	file_count = (int *)mmap(0, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
 	pthread_mutex_init(m, &attr);
 
 	while (1) {
