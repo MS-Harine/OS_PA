@@ -89,12 +89,24 @@ int _recv(int sock, char **message, int use_sock) {
 
 char * concat(const char *p, int n, const char *s) {
 	DPRINT(printf("> concat\n"));
-	char *r = (char *)malloc(sizeof(char) * 20);
-	if (p == NULL)
+	char *r;
+	if (p == NULL) {
+		r = malloc(sizeof(char) * (strlen(s) + 8));
+		if (r == NULL) {
+			fprintf(stderr, "Fail to malloc\n");
+			exit(-1);
+		}
 		sprintf(r, "%d%s", n, s);
-	else
+	}
+	else {
+		r = malloc(sizeof(char) * (strlen(p) + strlen(s) + 8));
+		if (r == NULL) {
+			fprintf(stderr, "Fail to malloc\n");
+			exit(-1);
+		}
 		sprintf(r, "%s%d%s", p, n, s);
-	r = (char *)realloc(r, sizeof(char) * strlen(r));
+	}
+	r = (char *)realloc(r, sizeof(char) * (strlen(r) + 1));
 	
 	DPRINT(printf("< concat %s\n", r));
 	return r;

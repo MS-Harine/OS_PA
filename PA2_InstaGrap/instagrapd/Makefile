@@ -6,6 +6,11 @@ INC = -I../include
 
 $(TARGET) : $(OBJECTS)
 	$(CC) $(CFLAGS) -o $(TARGET) $(OBJECTS) $(INC)
+	rm -rf $(OBJECTS)
+
+debug:
+	$(CC) $(CFLAGS) -o $(TARGET) instagrapd.c instagrapd_main.c $(INC) -DDEBUG
+	rm -rf $(OBJECTS)
 
 .c.o :
 	$(CC) -c $(INC) $(CFLAGS) $<

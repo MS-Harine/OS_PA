@@ -9,6 +9,7 @@ $(TARGET) : $(OBJECTS)
 
 debug:
 	$(CC) $(CFLAGS) -o $(TARGET) submitter.c submitter_main.c $(INC) -DDEBUG
+	rm -rf $(OBJECTS)
 
 .c.o :
 	$(CC) -c $(INC) $(CFLAGS) $<

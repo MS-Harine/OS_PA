@@ -30,6 +30,6 @@ typedef struct _dataset Data;
 int open_server(Data *, struct sockaddr_in *);
 int connect_to_worker(Data *);
 void * work(void *);
-int try_process(int, const char *, const char *, const char *, char **);
+int try_process(int, const char *, const char *, char **);
 
 #endif

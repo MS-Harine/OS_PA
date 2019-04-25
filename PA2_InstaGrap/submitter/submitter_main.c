@@ -16,7 +16,7 @@
 void handle_opt(int, char **, Data *);
 
 int main(int argc, char *argv[]) {
-	int sock = 0, status = 0;
+	int status = 0;
 	char *result = NULL;
 	Data info;
 
@@ -116,7 +116,7 @@ void handle_opt(int argc, char **argv, Data *data) {
 		fputs("Id should be 8 digit number.\n", stderr);
 		exit(EXIT_FAILURE);
 	}
-	for (i = 0; i < strlen((data->auth).id); i++) {
+	for (i = 0; i < (int)strlen((data->auth).id); i++) {
 		if (!isdigit((data->auth).id[i])) {
 			fputs("Id should be 8 digit number.\n", stderr);
 			exit(EXIT_FAILURE);
@@ -127,7 +127,7 @@ void handle_opt(int argc, char **argv, Data *data) {
 		fputs("PW should be 8 digit alphanumeric string.\n", stderr);
 		exit(EXIT_FAILURE);
 	}
-	for (i = 0; i < strlen((data->auth).pw); i++) {
+	for (i = 0; i < (int)strlen((data->auth).pw); i++) {
 		if (!isalnum((data->auth).pw[i])) {
 			fputs("PW should be 8 digit alphanumeric string.\n", stderr);
 			exit(EXIT_FAILURE);

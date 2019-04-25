@@ -198,7 +198,7 @@ char * trim(char *string) {
 int check_answer(char *result, char *answer_file) {
 	DPRINT(printf("> check_answer\n"));
 
-	int len = 0, status = 0, i = 0;
+	int len = 0, status = 0;
 	char *answer = NULL, buf[BUF_SIZE] = { 0, };
 	FILE *fp = NULL;
 
@@ -269,7 +269,7 @@ void * work(void *data) {
 		worker = connect_to_worker(info);
 		testcase = concat(test_dir, i, ".in", 1);
 		label = concat(test_dir, i, ".out", 1);
-		status = try_process(worker, content, testcase, label, &result);
+		status = try_process(worker, content, testcase, &result);
 		
 		if (status == BUILD_FAILED) {
 			message = (char *)malloc(sizeof(char) * (strlen(result) + 2));
@@ -312,7 +312,7 @@ void * work(void *data) {
 	return NULL;
 }
 
-int try_process(int worker, const char *c_content, const char *testcase, const char *label, char **result) {
+int try_process(int worker, const char *c_content, const char *testcase, char **result) {
 	DPRINT(printf("> try_process\n"));
 
 	char *message = NULL, *content = NULL, buf[BUF_SIZE] = { 0, };
@@ -320,26 +320,22 @@ int try_process(int worker, const char *c_content, const char *testcase, const c
 	FILE *fp = NULL;
 	union _type_caster caster;
 
-	if (testcase == NULL)
-		message = (char *)malloc(sizeof(char) * (strlen(c_content) + sizeof(caster) + 2));
-	else {
-		fp = fopen(testcase, "r");
-		if (fp == NULL) {
-			fputs("Failed to open testcase!\n", stderr);
-			exit(EXIT_FAILURE);
-		}
-
-		content = (char *)malloc(sizeof(char));
-		content[0] = 0x0;
-		while(fgets(buf, BUF_SIZE - 1, fp)) {
-			len += strlen(buf);
-			content = (char *)realloc(content, sizeof(char) * (len + 1));
-			strcat(content, buf);
-		}
-		fclose(fp);
-
-		message = (char *)malloc(sizeof(char) * (strlen(c_content) + strlen(content) + sizeof(caster) + 1));
+	fp = fopen(testcase, "r");
+	if (fp == NULL) {
+		fputs("Failed to open testcase!\n", stderr);
+		exit(EXIT_FAILURE);
 	}
+
+	content = (char *)malloc(sizeof(char));
+	content[0] = 0x0;
+	while(fgets(buf, BUF_SIZE - 1, fp)) {
+		len += strlen(buf);
+		content = (char *)realloc(content, sizeof(char) * (len + 1));
+		strcat(content, buf);
+	}
+	fclose(fp);
+
+	message = (char *)malloc(sizeof(char) * (strlen(c_content) + strlen(content) + sizeof(caster) + 1));
 
 	caster.length = strlen(c_content);
 	for (i = 0; i < 4; i++)
