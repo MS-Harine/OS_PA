@@ -1,9 +1,12 @@
 #include <stdio.h>
 
 int main() {
-	int a = 0;
-	scanf("%d", &a);2
-	if (a == 6) printf("%d", a);
-	else printf("%d", a + 1);
+	int a = 0, b = 0;
+	scanf("%d", &a);
+	scanf("%d", &b);
+
+	sleep(1);
+	printf("%d", a + b);
+
 	return 0;
 }

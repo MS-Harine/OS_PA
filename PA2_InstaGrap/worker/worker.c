@@ -3,12 +3,21 @@
 #include <string.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <signal.h>
 #include <sys/socket.h>
 #include <sys/wait.h>
 #include <sys/types.h>
+#include <sys/time.h>
 #include <arpa/inet.h>
 #include "protocol.h"
 #include "worker.h"
+
+pid_t child_pid = -1;
+
+void stop_child_process(int sig) {
+	if (sig == SIGALRM && (kill(child_pid, 0) == 0))
+		kill(child_pid, SIGKILL);
+}
 
 int _send(int sock, char *message, int use_sock) {
 	DPRINT(printf("> _send | sock: %d\n", sock));
@@ -78,6 +87,9 @@ int _recv(int sock, char **message, int use_sock) {
 	}
 
 	if (len <= 0) {
+		if (child_pid != -1)
+			return 0;
+
 		fputs("Failed to receive message.\n", stderr);
 		exit(EXIT_FAILURE);
 	}
@@ -143,6 +155,7 @@ int task(int sock, pthread_mutex_t *m) {
 	char *message = NULL, *c_content = NULL, *testcase = NULL, *filename = NULL, *output = NULL;
 	union _type_caster caster;
 	FILE *fp = NULL;
+	struct itimerval t;
 	pid_t pid = 0;
 
 	// Receive C file content and testcase
@@ -234,10 +247,26 @@ int task(int sock, pthread_mutex_t *m) {
 		close(pipes1[WRITE_END]); // Close write pipe
 		close(pipes2[READ_END]); // Close read pipe
 
+		child_pid = pid;
+		signal(SIGALRM, stop_child_process);
+		t.it_value.tv_sec = 3;
+		t.it_value.tv_usec = 0;
+		t.it_interval.tv_sec = 0;
+		t.it_interval.tv_usec = 0;
+
+		setitimer(ITIMER_REAL, &t, 0x0);
+
 		_send(pipes2[WRITE_END], testcase, FALSE);
-		_recv(pipes1[READ_END], &c_content, FALSE);
-		status = BUILD_SUCCESS;
-		message = concat(NULL, status, c_content);
+		len = _recv(pipes1[READ_END], &c_content, FALSE);
+		
+		if (len == 0) {
+			status = TEST_TIMEOUT;
+			message = concat(NULL, status, "Timeout");
+		}
+		else {
+			status = BUILD_SUCCESS;
+			message = concat(NULL, status, c_content);
+		}
 		message[0] -= '0';
 		_send(sock, message, TRUE);
 		shutdown(sock, SHUT_WR);

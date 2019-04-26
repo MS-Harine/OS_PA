@@ -31,13 +31,13 @@ int main(int argc, char *argv[]) {
 		}
 		if (status == BUILD_FAILED) {
 			printf("Build failed. See error message.\n");
-			printf("%s", result);
+			printf("%s\n", result);
 			exit(EXIT_FAILURE);
 		}
 
 		switch (status) {
 		case TEST_PROCESS:
-			printf("> Testing... %s\b", result);
+			printf("> Testing... %s\n", result);
 			sleep(WAIT_TIME);
 			break;
 		case TEST_TIMEOUT:
@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
 			printf("> %s/10\n", result);
 			break;
 		case TEST_SUCCESS:
-			printf("> Success!\n");
+			printf("\n> Success!\n");
 			printf("> %s/10\n", result);
 			break;
 		}

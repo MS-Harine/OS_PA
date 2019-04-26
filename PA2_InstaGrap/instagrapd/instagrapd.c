@@ -68,7 +68,7 @@ int _recv(int sock, char **message) {
 	return len;
 }
 
-int authenticate(char *message) {
+int authenticate(char *message, int *user) {
 	DPRINT(printf("> authenticate\n"));
 
 	int status = 0, i = 0;
@@ -85,8 +85,10 @@ int authenticate(char *message) {
 	status = -1;
 	for (i = 0; i < authCount; i++) {
 		if (!strcmp(id, auth[i].id)) {
-			if (!strcmp(pw, auth[i].pw))
+			if (!strcmp(pw, auth[i].pw)) {
 				status = LOGIN_SUCCESS;
+				*user = i;
+			}
 			else
 				status = LOGIN_FAILED;
 		}
@@ -96,6 +98,11 @@ int authenticate(char *message) {
 	if (status == -1) {
 		auth[authCount].id = strdup(id);
 		auth[authCount].pw = strdup(pw);
+		auth[authCount].status = TEST_INITIAL;
+		auth[authCount].result = NULL;
+		auth[authCount].process = 0;
+		*user = authCount;
+
 		authCount = (authCount + 1) % AUTHDATA_LEN;
 		if (auth[authCount].id != NULL) {
 			FREE(auth[authCount].id);
@@ -238,12 +245,12 @@ void * work(void *data) {
 	Data *info = arg->data;
 	char *test_dir = info->filepath;
 
-	int status = 0, i = 0, sum = 0, worker = 0;
+	int status = 0, i = 0, sum = 0, worker = 0, user = 0;
 	char *message = NULL, *content = NULL, *result = NULL, *testcase = NULL, *label = NULL;
 	
 	_recv(client, &message);
 	shutdown(client, SHUT_RD);
-	status = authenticate(message);
+	status = authenticate(message, &user);
 
 	if (status == LOGIN_FAILED) {
 		result = (char *)malloc(sizeof(char) * 2);
@@ -261,7 +268,36 @@ void * work(void *data) {
 	content = strdup(message + 17);
 	FREE(message);
 	
-	// TODO: Check for testing
+	if (auth[user].status == TEST_INITIAL) {
+		message = (char *)malloc(sizeof(char) * 2);
+		message[0] = TEST_PROCESS;
+		message[1] = 0x0;
+		
+		_send(client, message, 0);
+		shutdown(client, SHUT_WR);
+		FREE(message);
+		
+		auth[user].status = TEST_PROCESS;
+	}
+	else if (auth[user].status == TEST_PROCESS) {
+		message = (char *)malloc(sizeof(char) * 6);
+		sprintf(message, "%d%d/%d", auth[user].status, auth[user].process, 10);
+		message = realloc(message, sizeof(char) * (strlen(message) + 1));
+		message[0] -= '0';
+
+		_send(client, message, 0);
+		shutdown(client, SHUT_WR);
+		FREE(message);
+		return NULL;
+	}
+	else {
+		_send(client, auth[user].result, 0);
+		shutdown(client, SHUT_WR);
+		FREE(auth[user].result);
+		auth[user].status = TEST_INITIAL;
+		auth[user].process = 0;
+		return NULL;
+	}
 
 
 	// Test
@@ -277,25 +313,26 @@ void * work(void *data) {
 			strcpy(message + 1, result);
 			message[strlen(message + 1)] = 0x0;
 
-			_send(client, message, 0);
-			shutdown(client, SHUT_WR);
-			FREE(message);
+			auth[user].result = message;
+			auth[user].status = status;
 			return NULL;
 		}
 
 		if (status == TEST_TIMEOUT) {
 			message= (char *)malloc(sizeof(char) * 2);
 			sprintf(message, "%d", status);
-			_send(client, message, 0);
-			shutdown(client, SHUT_WR);
-			FREE(message);
-			break;
+			message[0] -= '0';
+			auth[user].result = message;
+			auth[user].status = status;
+			return NULL;
 		}
 
 		status = check_answer(result, label);
 
-		if (status == TEST_SUCCESS)
+		if (status == TEST_SUCCESS) {
+			auth[user].process++;
 			sum++;
+		}
 	}
 	
 	if (sum != 10)
@@ -304,9 +341,8 @@ void * work(void *data) {
 	message = (char *)malloc(sizeof(char) * 4);
 	sprintf(message, "%d%d", status, sum);
 	message[0] -= '0';
-	_send(client, message, 0);
-	shutdown(client, SHUT_WR);
-	FREE(message);
+	auth[user].result = message;
+	auth[user].status = status;
 
 	DPRINT(printf("< work\n"));
 	return NULL;

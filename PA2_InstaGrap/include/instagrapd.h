@@ -17,6 +17,9 @@ struct _dataset {
 struct _authdata {
 	char *id;
 	char *pw;
+	int status;
+	int process;
+	char *result;
 };
 
 struct _thread_args {

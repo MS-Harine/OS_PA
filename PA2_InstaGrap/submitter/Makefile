@@ -6,6 +6,7 @@ INC = -I../include
 
 $(TARGET) : $(OBJECTS)
 	$(CC) $(CFLAGS) -o $(TARGET) $(OBJECTS) $(INC)
+	rm -rf $(OBJECTS)
 
 debug:
 	$(CC) $(CFLAGS) -o $(TARGET) submitter.c submitter_main.c $(INC) -DDEBUG
