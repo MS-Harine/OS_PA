@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <ctype.h>
+#include <pthread.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -10,6 +11,7 @@
 #include "instagrapd.h"
 #include "protocol.h"
 
+pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
 AuthData auth[AUTHDATA_LEN] = { 0, };
 int authCount = 0;
 
@@ -83,6 +85,7 @@ int authenticate(char *message, int *user) {
 	pw[8] = 0x0;
 
 	status = -1;
+	pthread_mutex_lock(&m);
 	for (i = 0; i < authCount; i++) {
 		if (!strcmp(id, auth[i].id)) {
 			if (!strcmp(pw, auth[i].pw)) {
@@ -91,11 +94,13 @@ int authenticate(char *message, int *user) {
 			}
 			else
 				status = LOGIN_FAILED;
+			break;
 		}
 	}
+	pthread_mutex_unlock(&m);
 
-	// TODO: Synchronization
 	if (status == -1) {
+		pthread_mutex_lock(&m);
 		auth[authCount].id = strdup(id);
 		auth[authCount].pw = strdup(pw);
 		auth[authCount].status = TEST_INITIAL;
@@ -108,6 +113,7 @@ int authenticate(char *message, int *user) {
 			FREE(auth[authCount].id);
 			FREE(auth[authCount].pw);
 		}
+		pthread_mutex_unlock(&m);
 		status = LOGIN_SUCCESS;
 	}
 
@@ -276,7 +282,6 @@ void * work(void *data) {
 		_send(client, message, 0);
 		shutdown(client, SHUT_WR);
 		FREE(message);
-		
 		auth[user].status = TEST_PROCESS;
 	}
 	else if (auth[user].status == TEST_PROCESS) {
@@ -298,7 +303,6 @@ void * work(void *data) {
 		auth[user].process = 0;
 		return NULL;
 	}
-
 
 	// Test
 	for (i = 1; i <= 10; i++) {
