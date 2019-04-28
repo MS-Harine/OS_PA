@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
 			exit(EXIT_FAILURE);
 		}
 
-		if (fork() == 0) // Parent
+		if (fork() != 0) // Parent
 			close(client);
 		else // Child
 			task(client, m);

@@ -45,7 +45,7 @@ int _recv(int sock, char *message[]) {
 		else {
 			*message = realloc(*message, len + s + 1);
 			strncpy(*message + len, buf, s);
-			*message[len + s] = 0x0;
+			(*message)[len + s] = 0x0;
 			len += s;
 		}
 	}

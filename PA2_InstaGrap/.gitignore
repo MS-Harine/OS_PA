@@ -1,2 +1,4 @@
 *.o
-instagrapd/testcase/*
+instagrapd/instagrapd
+worker/worker
+submitter/submitter
