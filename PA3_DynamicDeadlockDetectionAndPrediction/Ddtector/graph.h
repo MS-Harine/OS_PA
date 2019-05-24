@@ -3,38 +3,40 @@
 
 #include <pthread.h>
 
-typedef pthread_mutex_t * Data;
+typedef struct {
+	pthread_mutex_t *mutex;
+	pthread_t tid;
+} data_t;
 
 typedef struct _node {
-	Data *data;
+	data_t *data;
 	struct _node *next;
 	struct _node *prev;
 } Node;
 
-typedef struct _linkedList {
+typedef struct {
 	Node *head;
 	Node *tail;
 } LinkedList;
 
-LinkedList * makeLinkedList();
-void addNode(LinkedList *, Data *);
-void delNode(LinkedList *, Data *);
-void delList(LinkedList *);
-
-
-typedef struct _adjNode {
+typedef struct _adj_node {
+	data_t *node;
 	LinkedList *link;
-	struct _adjNode *next;
-	struct _adjNode *prev;
+	struct _adj_node *next;
+	struct _adj_node *prev;
 } AdjNode;
 
 typedef struct _adjList {
 	AdjNode *head;
+	AdjNode *tail;
 } AdjList;
 
-AdjList * makeAdjList();
-void addNodeToAdj(AdjList *, Data *, Data *);
-void delNodeFromAdj(AdjList *, Data *);
-void delAdjList(AdjList *);
+void linked_list_init(LinkedList *);
+void delete_list(LinkedList *);
+
+void adj_list_init(AdjList *);
+void add_node(AdjList *, pthread_mutex_t *);
+void del_node(AdjList *, pthread_mutex_t *);
+void delete_adj_list(AdjList *);
 
 #endif
