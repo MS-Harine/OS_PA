@@ -1,7 +1,7 @@
 #ifndef __DETECTOR_FUNC_H__
 #define __DETECTOR_FUNC_H__
 
-#include "info.h"
+#include "data.h"
 #include "linked_list.h"
 #include "graph.h"
 

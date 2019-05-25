@@ -1,7 +1,7 @@
 #ifndef __GRAPH_H__
 #define __GRAPH_H__
 
-#include "info.h"
+#include "data.h"
 #include "linked_list.h"
 
 typedef struct _adj_node {
@@ -9,6 +9,9 @@ typedef struct _adj_node {
 	LinkedList *link;
 	struct _adj_node *next;
 	struct _adj_node *prev;
+
+	int visited;
+	int visiting;
 } AdjNode;
 
 typedef struct {

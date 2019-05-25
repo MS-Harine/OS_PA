@@ -14,11 +14,11 @@ Node * make_linked_node(data_t *data) {
 
 LinkedList * make_linked_list() {
 	LinkedList *new_list = (LinkedList *)malloc(sizeof(LinkedList));
-	plist->head = make_linked_node(make_data(NULL, pthread_self()));
-	plist->tail = make_linked_node(make_data(NULL, pthread_self()));
+	new_list->head = make_linked_node(make_data(NULL, pthread_self()));
+	new_list->tail = make_linked_node(make_data(NULL, pthread_self()));
 
-	plist->head->next = plist->tail;
-	plist->tail->prev = plist->head;
+	new_list->head->next = new_list->tail;
+	new_list->tail->prev = new_list->head;
 	return new_list;
 }
 
@@ -47,7 +47,7 @@ void linked_push_node(LinkedList *plist, data_t *data) {
 }
 
 data_t * linked_pop_node(LinkedList *plist) {
-	if (is_empty_list(plist))
+	if (is_empty_linked(plist))
 		return NULL;
 
 	data_t *ret_data = plist->tail->prev->data;
@@ -60,7 +60,7 @@ data_t * linked_pop_node(LinkedList *plist) {
 }
 
 void linked_delete_node(LinkedList *plist, data_t *target) {
-	if (is_empty_list(plist))
+	if (is_empty_linked(plist))
 		return;
 
 	Node *del_node = plist->head->next;

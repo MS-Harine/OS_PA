@@ -9,7 +9,7 @@
 struct _data_type {
 	pthread_mutex_t *mutex;
 	pthread_t owner;
-}
+};
 
 typedef struct _data_type data_t;
 

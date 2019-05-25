@@ -7,29 +7,13 @@
 #include "linked_list.h"
 #include "detector_func.h"
 
-AdjNode * find_node_by_id(AdjList *plist, cid_t target) {
-	if (plist == NULL)
-		return NULL;
-	
-	AdjNode *cur = plist->head->next;
-	while (cur != plist->tail) {
-		if (cur->tid == target)
-			break;
-		cur = cur->next;
-	}
-	
-	if (cur == plist->tail)
-		return NULL;
-	return cur;
-}
-
 AdjNode * find_node_by_data(AdjList *plist, data_t *target) {
 	if (plist == NULL)
 		return NULL;
 	
 	AdjNode *cur = plist->head->next;
 	while (cur != plist->tail) {
-		if (cur->mutex == target)
+		if (get_data(cur->data) == get_data(target))
 			break;
 		cur = cur->next;
 	}
@@ -47,10 +31,10 @@ void assign_mutex(AdjList *plist, data_t *data, LinkedList *stack) {
 
 	// Connect nodes with locked mutexes current
 	Node *locked_mutex = stack->head->next;
-	while (stacked_mutex != stack->tail) {
-		cur = find_node_by_data(plist, get_data(locked_mutex->data));
+	while (locked_mutex != stack->tail) {
+		cur = find_node_by_data(plist, locked_mutex->data);
 		if (cur == NULL) {
-			fputs(stderr, "Algorithm is wrong...");
+			fputs("Algorithm is wrong...", stderr);
 			exit(-1);
 		}
 
@@ -99,7 +83,70 @@ void expire_mutex(AdjList *plist, data_t *data) {
 }
 
 int dfs(AdjList *plist, LinkedList *stack) {
+	if (plist == NULL || is_empty_adj(plist))
+		return TRUE;
+
+	int result = TRUE;
+	int is_leaf = TRUE;
+	AdjNode *start = find_node_by_data(plist, linked_pop_node(stack));
+	Node *cur = start->link->tail->prev;
+	while (cur != start->link->head) {
+		AdjNode *temp = find_node_by_data(plist, cur->data);
+		if (temp->visiting)
+			return FALSE;
+
+		if (temp->visited == FALSE) {
+			is_leaf = FALSE;
+			linked_push_node(stack, cur->data);
+		}
+		cur = cur->prev;
+	}
+
+	start->visited = TRUE;
+	start->visiting = TRUE;
+
+	if (is_leaf) {
+		start->visiting = FALSE;
+		return TRUE;
+	}
+
+	while (!is_empty_linked(stack)) {
+		result &= dfs(plist, stack);
+		if (result == FALSE)
+			return FALSE;
+
+		is_leaf = TRUE;
+		cur = start->link->head;
+		while (cur != start->link->tail) {
+			if (find_node_by_data(plist, cur->data)->visited == FALSE) {
+				is_leaf = FALSE;
+				break;
+			}
+			cur = cur->next;
+		}
+		
+		if (is_leaf)
+			start->visiting = FALSE;
+	}
+
+	return result;
 }
 
 int find_cycle(AdjList *plist) {
+	if (is_empty_adj(plist))
+		return FALSE;
+
+	AdjNode *cur = plist->head->next;
+	while (cur != plist->tail) {
+		cur->visited = FALSE;
+		cur->visiting = FALSE;
+		cur = cur->next;
+	}
+	
+	LinkedList *stack = make_linked_list();
+	linked_push_node(stack, plist->head->next->data);
+	int result = dfs(plist, stack);
+	delete_linked_list(stack);
+
+	return !result;
 }

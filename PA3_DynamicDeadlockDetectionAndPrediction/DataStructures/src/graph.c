@@ -18,11 +18,11 @@ AdjNode * make_adj_node(data_t *data) {
 
 AdjList * make_adj_list() {
 	AdjList *new_list = (AdjList *)malloc(sizeof(AdjList));
-	plist->head = make_adj_node(make_data(NULL, pthread_self()));
-	plist->tail = make_adj_node(make_data(NULL, pthread_self()));
+	new_list->head = make_adj_node(make_data(NULL, pthread_self()));
+	new_list->tail = make_adj_node(make_data(NULL, pthread_self()));
 
-	plist->head->next = plist->tail;
-	plist->tail->prev = plist->head;
+	new_list->head->next = new_list->tail;
+	new_list->tail->prev = new_list->head;
 	return new_list;
 }
 
@@ -30,7 +30,7 @@ void delete_adj_list(AdjList *plist) {
 	if (plist == NULL)
 		return;
 	
-	while (!is_empty_list(plist))
+	while (!is_empty_adj(plist))
 		adj_pop_node(plist);
 
 	delete_data(plist->head->data);
@@ -53,7 +53,7 @@ void adj_push_node(AdjList *plist, data_t *data) {
 }
 
 data_t * adj_pop_node(AdjList *plist) {
-	if (is_empty_list(plist))
+	if (is_empty_adj(plist))
 		return NULL;
 
 	data_t *ret_data = plist->tail->prev->data;
@@ -67,7 +67,7 @@ data_t * adj_pop_node(AdjList *plist) {
 }
 
 void adj_delete_node(AdjList *plist, data_t *target) {
-	if (is_empty_list(plist))
+	if (is_empty_adj(plist))
 		return;
 
 	AdjNode *del_node = plist->head->next;
