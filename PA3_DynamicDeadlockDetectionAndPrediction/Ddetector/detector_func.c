@@ -8,7 +8,7 @@
 #include "detector_func.h"
 
 AdjNode * find_node_by_data(AdjList *plist, data_t *target) {
-	if (plist == NULL)
+	if (plist == NULL || target == NULL)
 		return NULL;
 	
 	AdjNode *cur = plist->head->next;
@@ -21,6 +21,22 @@ AdjNode * find_node_by_data(AdjList *plist, data_t *target) {
 	if (cur == plist->tail)
 		return NULL;
 	return cur;
+}
+
+int is_exist_linked_node(LinkedList *plist, data_t *target) {
+	if (plist == NULL || target == NULL)
+		return FALSE;
+
+	Node *cur = plist->head->next;
+	while (cur != plist->tail) {
+		if (get_data(cur->data) == get_data(target))
+			break;
+		cur = cur->next;
+	}
+
+	if (cur == plist->tail)
+		return FALSE;
+	return TRUE;
 }
 
 void assign_mutex(AdjList *plist, data_t *data, LinkedList *stack) {
@@ -48,6 +64,8 @@ void assign_mutex(AdjList *plist, data_t *data, LinkedList *stack) {
 		adj_push_node(plist, data);
 	else if (get_owner(cur->data) == pthread_self())
 		linked_push_node(cur->link, data);
+	else
+		add_owner(cur->data, pthread_self());
 
 	linked_push_node(stack, data);
 }
@@ -61,75 +79,64 @@ void expire_mutex(AdjList *plist, data_t *data) {
 		if (compare_data(cur->data, data)) {
 			Node *cur_node = cur->link->head->next;
 			while (cur_node != cur->link->tail) {
-				if (compare_owner(cur_node->data, data))
-					linked_delete_node(cur->link, cur_node->data);
+				if (compare_owner(cur_node->data, data)) {
+					Node *del_node = cur_node;
+					cur_node = cur_node->prev;
+					linked_delete_node(cur->link, del_node->data);
+				}
 				cur_node = cur_node->next;
 			}
 
-			if (is_empty_linked(cur->link))
-				adj_delete_node(plist, cur->data);
+			
+			if (is_empty_linked(cur->link)) {
+				AdjNode *del = cur;
+
+				delete_owner(del->data, get_owner(data));
+				if (get_owner(del->data) == 0) {
+					cur = cur->prev;
+					adj_delete_node(plist, del->data);
+				}
+			}
 		}
 		else {
 			Node *cur_node = cur->link->head->next;
 			while (cur_node != cur->link->tail) {
 				if (compare_data(cur_node->data, data) && compare_owner(cur_node->data, data)) {
-					linked_delete_node(cur->link, cur_node->data);
+					Node *del_node = cur_node;
+					cur_node = cur_node->prev;
+					linked_delete_node(cur->link, del_node->data);
 					break;
 				}
 				cur_node = cur_node->next;
 			}
 		}
+		cur = cur->next;
 	}
 }
 
-int dfs(AdjList *plist, LinkedList *stack) {
-	if (plist == NULL || is_empty_adj(plist))
-		return TRUE;
+int is_cycle(AdjList *plist, AdjNode *start) {
+	if (plist == NULL || is_empty_adj(plist) || start == NULL)
+		return FALSE;
+	
+	AdjNode *temp = NULL;
+	Node *cur = NULL;
 
-	int result = TRUE;
-	int is_leaf = TRUE;
-	AdjNode *start = find_node_by_data(plist, linked_pop_node(stack));
-	Node *cur = start->link->tail->prev;
-	while (cur != start->link->head) {
-		AdjNode *temp = find_node_by_data(plist, cur->data);
-		if (temp->visiting)
-			return FALSE;
+	if (start->visited == FALSE) {
+		start->visited = TRUE;
+		start->visiting = TRUE;
 
-		if (temp->visited == FALSE) {
-			is_leaf = FALSE;
-			linked_push_node(stack, cur->data);
-		}
-		cur = cur->prev;
-	}
-
-	start->visited = TRUE;
-	start->visiting = TRUE;
-
-	if (is_leaf) {
-		start->visiting = FALSE;
-		return TRUE;
-	}
-
-	while (!is_empty_linked(stack)) {
-		result &= dfs(plist, stack);
-		if (result == FALSE)
-			return FALSE;
-
-		is_leaf = TRUE;
-		cur = start->link->head;
+		cur = start->link->head->next;
 		while (cur != start->link->tail) {
-			if (find_node_by_data(plist, cur->data)->visited == FALSE) {
-				is_leaf = FALSE;
-				break;
-			}
+			temp = find_node_by_data(plist, cur->data);
+			if (temp->visiting)
+				return TRUE;
+			else if ((temp->visited == FALSE) && is_cycle(plist, temp))
+				return TRUE;
 			cur = cur->next;
 		}
-		
-		if (is_leaf)
-			start->visiting = FALSE;
 	}
-
-	return result;
+	start->visiting = FALSE;
+	return FALSE;
 }
 
 int find_cycle(AdjList *plist) {
@@ -143,10 +150,12 @@ int find_cycle(AdjList *plist) {
 		cur = cur->next;
 	}
 	
-	LinkedList *stack = make_linked_list();
-	linked_push_node(stack, plist->head->next->data);
-	int result = dfs(plist, stack);
-	delete_linked_list(stack);
+	cur = plist->head->next;
+	while (cur != plist->tail) {
+		if (is_cycle(plist, cur))
+			return TRUE;
+		cur = cur->next;
+	}
 
-	return !result;
+	return FALSE;
 }

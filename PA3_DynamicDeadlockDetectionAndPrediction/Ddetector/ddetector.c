@@ -13,6 +13,29 @@ static AdjList *threads_lock_stack = NULL;
 
 static pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
 
+#ifdef DEBUG
+void print_graph(AdjList *plist) {
+	printf("-------------------------\n");
+	AdjNode *cur = plist->head->next;
+//	printf("(%p) --> \n", plist->head);
+	while (cur != plist->tail) {
+//		printf("%p | %p : ", cur, get_data(cur->data));
+		printf("%p : ", get_data(cur->data));
+		Node *c = cur->link->head->next;
+//		printf("(%p) -> ", cur->link->head);
+		while (c != cur->link->tail) {
+			printf("%p -> ", get_data(c->data));
+			c = c->next;
+		}
+//		printf("(%p) -> END\n", cur->link->tail);
+		printf("END\n");
+		cur = cur->next;
+	}
+//	printf("(%p) \n", plist->tail);
+	printf("-------------------------\n\n");
+}
+#endif
+
 AdjNode * find_node(AdjList *plist, pthread_t id) {
 	if (is_empty_adj(plist))
 		return NULL;
@@ -41,6 +64,10 @@ int pthread_mutex_lock(pthread_mutex_t *mutex) {
 	
 	orig_lock(&m);
 	{
+	#ifdef DEBUG
+		printf("Lock Mutex %p by %ld\n", mutex, pthread_self());
+	#endif
+		
 		if (graph == NULL)
 			graph = make_adj_list();
 		if (threads_lock_stack == NULL)
@@ -53,6 +80,10 @@ int pthread_mutex_lock(pthread_mutex_t *mutex) {
 		}
 		else
 			assign_mutex(graph, make_data(mutex, pthread_self()), self->link);
+
+	#ifdef DEBUG
+		print_graph(graph);
+	#endif
 
 		if (find_cycle(graph))
 			fprintf(stderr, "Deadlock detected!\n");
@@ -76,6 +107,10 @@ int pthread_mutex_unlock(pthread_mutex_t *mutex) {
 
 	orig_lock(&m);
 	{
+	#ifdef DEBUG
+		printf("Unlock Mutex %p by %ld\n", mutex, pthread_self());
+	#endif
+		
 		if (graph == NULL || threads_lock_stack == NULL) {
 			fprintf(stderr, "Invalid function invoke detected!\n");
 			return orig_unlock(mutex);
@@ -89,6 +124,9 @@ int pthread_mutex_unlock(pthread_mutex_t *mutex) {
 		}
 	
 		linked_pop_node(self->link);
+	#ifdef DEBUG
+		print_graph(graph);
+	#endif
 	}
 	orig_unlock(&m);
 

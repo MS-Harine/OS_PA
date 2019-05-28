@@ -72,7 +72,7 @@ void linked_delete_node(LinkedList *plist, data_t *target) {
 
 	del_node->prev->next = del_node->next;
 	del_node->next->prev = del_node->prev;
-	delete_data(del_node->data);
+	//delete_data(del_node->data);
 	free(del_node);
 }
 
