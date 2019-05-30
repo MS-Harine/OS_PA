@@ -11,6 +11,7 @@ static const char *filename = "dmonitor.trace";
 static __thread int n_count = 0;
 
 static FILE *fp = NULL;
+static int flag = 0;
 
 char * parsing_address(const char *str) {
 	int i = 0, j = 0, status = 0;
@@ -29,6 +30,18 @@ char * parsing_address(const char *str) {
 	result[j - 1] = '\0';
 	result = realloc(result, sizeof(char) * (strlen(result) + 1));
 	return result;
+}
+
+char * parsing_filename(const char *str) {
+	char *binary = strdup(str);
+	for (int i = 0; i < strlen(binary); i++) {
+		if (binary[i] == '(') {
+			binary[i] = '\0';
+			break;
+		}
+	}
+	binary = realloc(binary, sizeof(char) * (strlen(binary) + 1));
+	return binary;
 }
 
 int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_routine)(void *), void *arg) {
@@ -74,6 +87,11 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_
 #ifdef DEBUG
 		printf("c,%ld,%ld,%s\n", pthread_self(), *thread, address);
 #endif
+		if (flag == 0) {
+			char *name = parsing_filename(stack[1]);
+			fprintf(fp, "%s\n", name);
+			flag = 1;
+		}
 		fprintf(fp, "c,%ld,%ld,%s\n", pthread_self(), *thread, address);
 		fclose(fp);
 		
@@ -120,6 +138,11 @@ int pthread_mutex_lock(pthread_mutex_t *mutex) {
 #ifdef DEBUG
 		printf("l,%ld,%p,%s\n", pthread_self(), mutex, address);
 #endif
+		if (flag == 0) {
+			char *name = parsing_filename(stack[1]);
+			fprintf(fp, "%s\n", name);
+			flag = 1;
+		}
 		fprintf(fp, "l,%ld,%p,%s\n", pthread_self(), mutex, address);
 		fclose(fp);
 		
@@ -168,6 +191,11 @@ int pthread_mutex_unlock(pthread_mutex_t *mutex) {
 #ifdef DEBUG
 		printf("u,%ld,%p,%s\n", pthread_self(), mutex, address);
 #endif
+		if (flag == 0) {
+			char *name = parsing_filename(stack[1]);
+			fprintf(fp, "%s\n", name);
+			flag = 1;
+		}
 		fprintf(fp, "u,%ld,%p,%s\n", pthread_self(), mutex, address);
 		fclose(fp);
 	
