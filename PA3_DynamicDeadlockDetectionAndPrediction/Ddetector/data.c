@@ -29,6 +29,14 @@ data_t * make_data(pthread_mutex_t *m, pthread_t o) {
 	return new_data;
 }
 
+data_t * make_dummy_data() {
+	data_t *new_data = (data_t *)malloc(sizeof(data_t));
+	new_data->mutex = NULL;
+	new_data->owner = 0;
+	new_data->owner_list = NULL;
+	return new_data;
+}
+
 void delete_data(data_t *data) {
 	struct _owner_node *cur = data->owner_list->head, *prev = NULL;
 	while (cur != NULL) {

@@ -16,14 +16,15 @@ int get_segment(seg_data_t *data) {
 	return data->segment;
 }
 
-pthread_t get_owner(seg_data_t *data) {
+pthread_t get_seg_owner(seg_data_t *data) {
 	return data->owner;
 }
 
-int compare_segment(seg_data_t *d1, seg_data_t *d2) {
+int compare_seg_data(seg_data_t *d1, seg_data_t *d2) {
 	return d1->segment == d2->segment;
 }
 
-int compare_owner(seg_data_t *d1, seg_data_t *d2) {
+int compare_seg_owner(seg_data_t *d1, seg_data_t *d2) {
 	return d1->owner == d2->owner;
 }
+

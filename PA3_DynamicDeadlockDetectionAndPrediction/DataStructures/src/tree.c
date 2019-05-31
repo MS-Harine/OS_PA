@@ -70,16 +70,16 @@ TreeNode * get_right_child(TreeNode *pnode) {
 	return pnode->right;
 }
 
-TreeNode * find_node(TreeNode *pnode, seg_data_t *d) {
+TreeNode * find_tree_node(TreeNode *pnode, seg_data_t *d) {
 	if (pnode == NULL)
 		return NULL;
-	else if (compare_owner(pnode->data, d))
+	else if (compare_seg_owner(pnode->data, d))
 		return pnode;
 
 	TreeNode *result = NULL;
-	if ((result = find_node(pnode->left, d)) != NULL)
+	if ((result = find_tree_node(pnode->left, d)) != NULL)
 		return result;
-	else if ((result = find_node(pnode->right, d)) != NULL)
+	else if ((result = find_tree_node(pnode->right, d)) != NULL)
 		return result;
 	else
 		return NULL;

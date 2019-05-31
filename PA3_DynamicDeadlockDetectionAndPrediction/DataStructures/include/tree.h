@@ -21,6 +21,6 @@ void connect_right(TreeNode *, seg_data_t *);
 TreeNode * get_left_child(TreeNode *);
 TreeNode * get_right_child(TreeNode *);
 
-TreeNode * find_node(TreeNode *, seg_data_t *);
+TreeNode * find_tree_node(TreeNode *, seg_data_t *);
 
 #endif

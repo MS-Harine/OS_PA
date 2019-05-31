@@ -4,10 +4,10 @@ TARGET = dpredictor
 INC = -I../DataStructures/include -I.
 
 all : 
-	$(CC) $(CFLAGS) -o $(TARGET) dpredictor.c seg_data.c ../DataStructures/src/tree.c $(INC)
+	$(CC) $(CFLAGS) -o $(TARGET) seg_data.c data.c ../DataStructures/src/linked_list.c ../DataStructures/src/graph.c ../DataStructures/src/tree.c dpredictor.c $(INC)
 
 debug :
-	$(CC) $(CFLAGS) -o $(TARGET) dpredictor.c seg_data.c ../DataStructures/src/tree.c $(INC) -DDEBUG
+	$(CC) $(CFLAGS) -o $(TARGET) seg_data.c data.c ../DataStructures/src/linked_list.c ../DataStructures/src/graph.c ../DataStructures/src/tree.c dpredictor.c $(INC) -DDEBUG
 
 clean : 
 	rm $(TARGET)

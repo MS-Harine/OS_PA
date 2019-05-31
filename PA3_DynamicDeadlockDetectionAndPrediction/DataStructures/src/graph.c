@@ -81,7 +81,7 @@ void adj_delete_node(AdjList *plist, data_t *target) {
 	del_node->next->prev = del_node->prev;
 
 	delete_linked_list(del_node->link);
-	delete_data(del_node->data);
+//	delete_data(del_node->data);
 	free(del_node);
 }
 
