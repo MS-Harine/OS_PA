@@ -50,7 +50,7 @@ void assign_mutex(AdjList *plist, data_t *data, LinkedList *stack) {
 	while (locked_mutex != stack->tail) {
 		cur = find_node_by_data(plist, locked_mutex->data);
 		if (cur == NULL) {
-			fputs("Algorithm is wrong...", stderr);
+			fputs("Algorithm is wrong...\n", stderr);
 			exit(-1);
 		}
 

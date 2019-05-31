@@ -17,21 +17,16 @@ static pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
 void print_graph(AdjList *plist) {
 	printf("-------------------------\n");
 	AdjNode *cur = plist->head->next;
-//	printf("(%p) --> \n", plist->head);
 	while (cur != plist->tail) {
-//		printf("%p | %p : ", cur, get_data(cur->data));
-		printf("%p : ", get_data(cur->data));
+		printf("%p | %ld : ", get_data(cur->data), get_owner(cur->data));
 		Node *c = cur->link->head->next;
-//		printf("(%p) -> ", cur->link->head);
 		while (c != cur->link->tail) {
 			printf("%p -> ", get_data(c->data));
 			c = c->next;
 		}
-//		printf("(%p) -> END\n", cur->link->tail);
 		printf("END\n");
 		cur = cur->next;
 	}
-//	printf("(%p) \n", plist->tail);
 	printf("-------------------------\n\n");
 }
 #endif
@@ -83,6 +78,7 @@ int pthread_mutex_lock(pthread_mutex_t *mutex) {
 
 	#ifdef DEBUG
 		print_graph(graph);
+		print_graph(threads_lock_stack);
 	#endif
 
 		if (find_cycle(graph))
@@ -116,16 +112,18 @@ int pthread_mutex_unlock(pthread_mutex_t *mutex) {
 			return orig_unlock(mutex);
 		}
 
-		expire_mutex(graph, make_data(mutex, pthread_self()));
+		data_t *data = make_data(mutex, pthread_self());
+		expire_mutex(graph, data);
 		AdjNode *self = find_node(threads_lock_stack, pthread_self());
 		if (self == NULL) {
 			fprintf(stderr, "Algorithm is wrong... :(\n");
 			return orig_unlock(mutex);
 		}
 	
-		linked_pop_node(self->link);
+		linked_delete_node(self->link, data);
 	#ifdef DEBUG
 		print_graph(graph);
+		print_graph(threads_lock_stack);
 	#endif
 	}
 	orig_unlock(&m);
