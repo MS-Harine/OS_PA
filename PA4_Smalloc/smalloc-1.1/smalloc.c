@@ -1,5 +1,6 @@
 #include <unistd.h>
 #include <stdio.h>
+#include <limits.h>
 #include "smalloc.h" 
 
 sm_container_ptr sm_first = NULL;
@@ -39,6 +40,7 @@ void * sm_retain_more_memory(int size) {
 void * smalloc(size_t size) {
 	sm_container_ptr hole = NULL;
 	sm_container_ptr itr = NULL;
+	size_t min_hole = INT_MAX;
 
 	for (itr = sm_first; itr != NULL; itr = itr->next) {
 		if (itr->status == Busy)
@@ -50,8 +52,10 @@ void * smalloc(size_t size) {
 			return itr->data;
 		} else if (size + sizeof(sm_container_t) < itr->dsize) {
 			// a hole large enought to split 
-			hole = itr;
-			break; 
+			if (itr->dsize < min_hole) {
+				min_hole = itr->dsize;
+				hole = itr;
+			}
 		}
 	}
 	
