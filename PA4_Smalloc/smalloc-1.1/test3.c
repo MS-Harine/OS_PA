@@ -222,6 +222,7 @@ int main(void) {
 	printf("string at node with key %d = '%s' \n",2,get_string(list, 2));
 	free_list(list);
 
+	print_sm_uses();
 	return OK;
 }
 

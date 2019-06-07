@@ -6,34 +6,30 @@ main()
 {
 	void *p1, *p2, *p3, *p4, *p5;
 
-	print_sm_containers();
+	p1 = smalloc(1000); 
+	printf("smalloc(1000)\n"); 
 
-	p1 = smalloc(300); 
-	printf("smalloc(300)\n"); 
-	print_sm_containers();
+	p2 = smalloc(400); 
+	printf("smalloc(400)\n"); 
 
-	p2 = smalloc(200); 
-	printf("smalloc(200)\n"); 
-	print_sm_containers();
+	p3 = smalloc(1000); 
+	printf("smalloc(1000)\n"); 
 
-	p3 = smalloc(100); 
-	printf("smalloc(100)\n"); 
-	print_sm_containers();
+	p4 = smalloc(350); 
+	printf("smalloc(350)\n"); 
 
-	sfree(p1); 
-	printf("sfree(%p)\n", p1); 
-	print_sm_containers();
+	p5 = smalloc(1000); 
+	printf("smalloc(1000)\n"); 
 
 	sfree(p2); 
 	printf("sfree(%p)\n", p2); 
+
+	sfree(p4); 
+	printf("sfree(%p)\n", p4); 
 	print_sm_containers();
 
-	sfree(p3); 
-	printf("sfree(%p)\n", p3); 
-	print_sm_containers();
-
-	p1 = smalloc(110);
-	printf("smalloc(110)\n");
+	p2 = smalloc(300);
+	printf("smalloc(300)\n");
 	print_sm_containers();
 
 	print_sm_uses();

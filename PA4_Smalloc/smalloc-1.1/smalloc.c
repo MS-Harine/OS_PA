@@ -40,7 +40,7 @@ void * sm_retain_more_memory(int size) {
 void * smalloc(size_t size) {
 	sm_container_ptr hole = NULL;
 	sm_container_ptr itr = NULL;
-	size_t min_hole = INT_MAX;
+	size_t min_hole = UINT_MAX;
 
 	for (itr = sm_first; itr != NULL; itr = itr->next) {
 		if (itr->status == Busy)
