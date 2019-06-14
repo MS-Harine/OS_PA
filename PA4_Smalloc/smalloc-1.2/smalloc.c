@@ -106,7 +106,9 @@ void * smalloc(size_t size) {
 }
 
 void sfree(void * p) {
-	sm_container_ptr itr = NULL, prev_hole = NULL;
+	sm_container_ptr itr = NULL, prev_hole = NULL, last = NULL;
+	int size = 0;
+
 	for (itr = sm_first; itr->next != NULL; itr = itr->next) {
 		if (itr->data == p) {
 			itr->status = Unused;
@@ -124,6 +126,27 @@ void sfree(void * p) {
 	else {
 		itr->next_unused = sm_unused_containers;
 		sm_unused_containers = itr;
+	}
+
+	if (prev_hole == NULL)
+		last = itr;
+	else if (prev_hole->next == itr)
+		last = itr = prev_hole;
+	else
+		last = itr;
+	prev_hole = NULL;
+
+	while (itr != NULL && itr->status == Unused) {
+		size += (itr->dsize + sizeof(sm_container_t));
+		prev_hole = itr;
+		itr = itr->next;
+	}
+
+	if (size != 0) {
+		size -= sizeof(sm_container_t);
+		last->dsize = size;
+		last->next_unused = prev_hole == NULL ? prev_hole : prev_hole->next_unused;
+		last->next = itr;
 	}
 }
 
