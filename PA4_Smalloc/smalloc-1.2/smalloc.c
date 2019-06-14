@@ -6,6 +6,7 @@
 sm_container_ptr sm_first = NULL;
 sm_container_ptr sm_last = NULL;
 sm_container_ptr sm_unused_containers = NULL;
+sm_container_ptr sm_before_hole_unused = NULL;
 
 void sm_container_split(sm_container_ptr hole, size_t size) {
 	sm_container_ptr remainder = hole->data + size;
@@ -18,6 +19,16 @@ void sm_container_split(sm_container_ptr hole, size_t size) {
 
 	if (hole == sm_last)
 		sm_last = remainder;
+
+	if (sm_before_hole_unused != NULL) {
+		remainder->next_unused = hole->next_unused;
+		sm_before_hole_unused->next_unused = remainder;
+	}
+	else {
+		remainder->next_unused = sm_unused_containers->next_unused;
+		sm_unused_containers = remainder;
+	}
+	hole->next_unused = NULL;
 }
 
 void * sm_retain_more_memory(int size) {
@@ -33,6 +44,8 @@ void * sm_retain_more_memory(int size) {
 	hole->data = ((void *) hole) + sizeof(sm_container_t);
 	hole->dsize = n_pages * getpagesize() - sizeof(sm_container_t);
 	hole->status = Unused;
+	hole->next = NULL;
+	hole->next_unused = NULL;
 
 	return hole;
 }
@@ -40,26 +53,35 @@ void * sm_retain_more_memory(int size) {
 void * smalloc(size_t size) {
 	sm_container_ptr hole = NULL;
 	sm_container_ptr itr = NULL;
+	sm_container_ptr last_unused = NULL;
 	size_t min_hole = INT_MAX;
 
-	for (itr = sm_first; itr != NULL; itr = itr->next) {
-		if (itr->status == Busy)
-			continue;
-
+	sm_before_hole_unused = NULL;
+	for (itr = sm_unused_containers; itr != NULL; itr = itr->next_unused) {
 		if (size == itr->dsize) {
 			// a hole of the exact size
+			if (last_unused != NULL)
+				last_unused->next_unused = itr->next_unused;
+			else
+				sm_unused_containers = sm_unused_containers->next;
+
 			itr->status = Busy;
+			itr->next_unused = NULL;
 			return itr->data;
 		} else if (size + sizeof(sm_container_t) < itr->dsize) {
 			// a hole large enought to split 
 			if (itr->dsize < min_hole) {
 				min_hole = itr->dsize;
+				sm_before_hole_unused = last_unused;
 				hole = itr;
 			}
 		}
+
+		last_unused = itr;
 	}
-	
+
 	if (hole == NULL) {
+		sm_before_hole_unused = last_unused;
 		hole = sm_retain_more_memory(size);
 
 		if (hole == NULL)
@@ -68,6 +90,7 @@ void * smalloc(size_t size) {
 		if (sm_first == NULL) {
 			sm_first = hole;
 			sm_last = hole;
+			sm_unused_containers = hole;
 			hole->next = NULL;
 		} else {
 			sm_last->next = hole;
@@ -78,16 +101,29 @@ void * smalloc(size_t size) {
 	sm_container_split(hole, size);
 	hole->dsize = size;
 	hole->status = Busy;
+
 	return hole->data;
 }
 
 void sfree(void * p) {
-	sm_container_ptr itr;
+	sm_container_ptr itr = NULL, prev_hole = NULL;
 	for (itr = sm_first; itr->next != NULL; itr = itr->next) {
 		if (itr->data == p) {
 			itr->status = Unused;
 			break;
 		}
+
+		if (itr->status == Unused)
+			prev_hole = itr;
+	}
+
+	if (prev_hole != NULL) {
+		itr->next_unused = prev_hole->next_unused;
+		prev_hole->next_unused = itr;
+	}
+	else {
+		itr->next_unused = sm_unused_containers;
+		sm_unused_containers = itr;
 	}
 }
 
@@ -108,6 +144,25 @@ void print_sm_containers() {
 		printf("\n");
 	}
 	printf("=======================================================\n");
+}
+
+void print_unused() {
+	sm_container_ptr itr = NULL;
+	int i = 0;
+
+	printf("======================= Unused ==========================\n");
+	for (itr = sm_unused_containers; itr != NULL; itr = itr->next_unused, i++) {
+		char *s;
+		printf("%3d:%p:%s:", i, itr->data, itr->status == Unused ? "Unused" : "  Busy");
+		printf("%8d:", (int)itr->dsize);
+		
+		for (s = (char *) itr->data;
+				s < (char *) itr->data + (itr->dsize > 8 ? 8 : itr->dsize);
+				s++) 
+			printf("%02x ", *s);
+		printf("\n");
+	}
+	printf("=========================================================\n");
 }
 
 void print_sm_uses() {

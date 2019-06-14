@@ -220,8 +220,11 @@ int main(void) {
 	remove_end(list);
 	print_list(list);
 	printf("string at node with key %d = '%s' \n",2,get_string(list, 2));
-	free_list(list);
 
+	print_sm_containers();
+	print_unused();
+
+	free_list(list);
 	return OK;
 }
 

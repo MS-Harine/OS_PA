@@ -11,30 +11,37 @@ main()
 	p1 = smalloc(300); 
 	printf("smalloc(300)\n"); 
 	print_sm_containers();
+	print_unused();
 
 	p2 = smalloc(200); 
 	printf("smalloc(200)\n"); 
 	print_sm_containers();
+	print_unused();
 
 	p3 = smalloc(100); 
 	printf("smalloc(100)\n"); 
 	print_sm_containers();
+	print_unused();
 
 	sfree(p1); 
 	printf("sfree(%p)\n", p1); 
 	print_sm_containers();
+	print_unused();
 
 	sfree(p2); 
 	printf("sfree(%p)\n", p2); 
 	print_sm_containers();
+	print_unused();
 
 	sfree(p3); 
 	printf("sfree(%p)\n", p3); 
 	print_sm_containers();
+	print_unused();
 
 	p1 = smalloc(110);
 	printf("smalloc(110)\n");
 	print_sm_containers();
+	print_unused();
 
 	print_sm_uses();
 }
